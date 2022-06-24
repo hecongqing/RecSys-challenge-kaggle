@@ -6,7 +6,7 @@
 
 Divide the data (clicks and buys) into two parts based on the timestamp---training (roughly 2/3rds of dataset based on timestamp) and test data. Train your model on the training data and evaluate its performance on the test data.
 
-The data comprises two different files:
+**The data comprises two different files:**
 
 yoochoose-clicks.dat - Click events. 
 Each record/line in the file has the following fields:
