@@ -1,0 +1,24 @@
+# RecSys Challenge 2015 GNN-based Session Recommendation System
+# Core ML and Data Processing
+torch>=2.0.0
+torch-geometric>=2.3.0
+pandas>=1.5.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+
+# Visualization and Analysis
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.15.0
+
+# Utilities
+tqdm>=4.65.0
+jupyter>=1.0.0
+ipykernel>=6.25.0
+
+# Optional: for better performance
+pyg-lib
+torch-scatter
+torch-sparse
+torch-cluster
+torch-spline-conv
