@@ -99,8 +99,7 @@ class SessionTrainer:
             self.optimizer,
             mode='max',
             factor=0.5,
-            patience=5,
-            verbose=True
+            patience=5
         )
         
         # 训练历史

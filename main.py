@@ -214,6 +214,10 @@ def prepare_data(args):
             else:
                 print(f"  {key}: {value}")
     
+    # 8. 获取物品总数
+    num_items = len(preprocessor.item_encoder.classes_)
+    data_stats['num_items'] = num_items
+    
     return train_dataset, val_dataset, test_dataset, data_stats
 
 
@@ -511,7 +515,7 @@ def main_pipeline(args):
     )
     
     # 3. 获取物品数量和设备
-    num_items = data_stats['训练集']['total_items'] + 1  # +1 for padding
+    num_items = data_stats['num_items']
     device = get_device(args.device)
     
     # 4. 创建模型

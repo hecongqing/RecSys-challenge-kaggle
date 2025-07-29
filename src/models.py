@@ -137,7 +137,11 @@ class SessionGNN(nn.Module):
         
         # 1. 物品嵌入
         # x: [num_nodes_in_batch, 1] -> [num_nodes_in_batch, embed_dim]
-        x = self.item_embedding(x.squeeze(-1))
+        # 添加边界检查防止索引越界
+        x_indices = x.squeeze(-1)
+        # 确保所有索引都在有效范围内 [0, num_items-1]
+        x_indices = torch.clamp(x_indices, 0, self.num_items - 1)
+        x = self.item_embedding(x_indices)
         
         # 2. 多层图卷积和池化
         global_features = []
@@ -229,7 +233,10 @@ class AttentionSessionGNN(nn.Module):
         x, edge_index, batch = data.x, data.edge_index, data.batch
         
         # 嵌入
-        x = self.item_embedding(x.squeeze(-1))
+        # 添加边界检查防止索引越界
+        x_indices = x.squeeze(-1)
+        x_indices = torch.clamp(x_indices, 0, self.num_items - 1)
+        x = self.item_embedding(x_indices)
         
         # 收集每层的全局特征
         layer_features = []
@@ -316,7 +323,10 @@ class Set2SetSessionGNN(nn.Module):
         x, edge_index, batch = data.x, data.edge_index, data.batch
         
         # 嵌入
-        x = self.item_embedding(x.squeeze(-1))
+        # 添加边界检查防止索引越界
+        x_indices = x.squeeze(-1)
+        x_indices = torch.clamp(x_indices, 0, self.num_items - 1)
+        x = self.item_embedding(x_indices)
         
         # 图卷积
         for conv in self.convs:

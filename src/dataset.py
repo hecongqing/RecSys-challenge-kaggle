@@ -41,6 +41,7 @@ class YooChooseDataset(InMemoryDataset):
                  root: str, 
                  df: pd.DataFrame,
                  name: str = "yoochoose",
+                 max_item_id: Optional[int] = None,
                  transform=None, 
                  pre_transform=None):
         """
@@ -50,11 +51,13 @@ class YooChooseDataset(InMemoryDataset):
             root (str): 数据集根目录
             df (pd.DataFrame): 预处理后的数据框
             name (str): 数据集名称
+            max_item_id (Optional[int]): 最大允许的item_id值，用于边界检查
             transform: 数据变换函数
             pre_transform: 预变换函数
         """
         self.df = df
         self.name = name
+        self._max_item_id = max_item_id
         
         # 为节点特征创建物品编码器
         self.item_encoder = LabelEncoder()
@@ -62,7 +65,8 @@ class YooChooseDataset(InMemoryDataset):
         super(YooChooseDataset, self).__init__(root, transform, pre_transform)
         
         # 加载处理后的数据
-        self.data, self.slices = torch.load(self.processed_paths[0])
+        # 修复PyTorch 2.6的torch.load安全性更新问题
+        self.data, self.slices = torch.load(self.processed_paths[0], weights_only=False)
         
     @property
     def raw_file_names(self) -> List[str]:
@@ -108,6 +112,15 @@ class YooChooseDataset(InMemoryDataset):
             # 每个节点的特征是原始的item_id（用于后续的嵌入查找）
             unique_items = group.drop_duplicates('node_id').sort_values('node_id')
             node_features = unique_items['item_id'].values
+            
+            # 添加边界检查：确保所有item_id都在有效范围内
+            max_item_id = np.max(node_features)
+            if hasattr(self, '_max_item_id'):
+                if max_item_id > self._max_item_id:
+                    print(f"警告: 发现超出范围的item_id {max_item_id}, 最大允许值: {self._max_item_id}")
+                    # 将超出范围的item_id截断到最大值
+                    node_features = np.clip(node_features, 0, self._max_item_id)
+            
             x = torch.LongTensor(node_features).unsqueeze(1)  # [num_nodes, 1]
             
             # 创建边：连接连续的物品
@@ -303,23 +316,31 @@ def create_datasets(train_df: pd.DataFrame,
     # 确保目录存在
     os.makedirs(root_dir, exist_ok=True)
     
+    # 计算所有数据中的最大item_id，用于边界检查
+    all_dfs = [train_df, val_df, test_df]
+    max_item_id = max(df['item_id'].max() for df in all_dfs if len(df) > 0)
+    print(f"数据中最大item_id: {max_item_id}")
+    
     # 创建数据集
     train_dataset = YooChooseDataset(
         root=os.path.join(root_dir, "train"),
         df=train_df,
-        name="train"
+        name="train",
+        max_item_id=max_item_id
     )
     
     val_dataset = YooChooseDataset(
         root=os.path.join(root_dir, "val"),
         df=val_df,
-        name="val"
+        name="val",
+        max_item_id=max_item_id
     )
     
     test_dataset = YooChooseDataset(
         root=os.path.join(root_dir, "test"),
         df=test_df,
-        name="test"
+        name="test",
+        max_item_id=max_item_id
     )
     
     print(f"数据集创建完成:")
